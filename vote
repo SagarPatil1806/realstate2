@@ -1,0 +1,100 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+// Define constants
+#define MAX_CANDIDATES 10
+#define MAX_NAME_LENGTH 50
+
+// Candidate structure
+typedef struct {
+    char name[MAX_NAME_LENGTH];
+    int votes;
+} Candidate;
+
+// Function prototypes
+void displayMenu();
+int getNumCandidates();
+void getCandidateNames(Candidate candidates[], int numCandidates);
+void vote(Candidate candidates[], int numCandidates, int choice);
+void displayResults(Candidate candidates[], int numCandidates);
+
+int main() {
+    int numCandidates;
+    Candidate candidates[MAX_CANDIDATES];
+
+    // Get number of candidates
+    numCandidates = getNumCandidates();
+
+    // Get candidate names
+    getCandidateNames(candidates, numCandidates);
+
+    // Display menu
+    displayMenu();
+
+    // Voting process
+    int choice;
+    do {
+        printf("Enter your choice (1-%d, 0 to exit): ", numCandidates);
+        scanf("%d", &choice);
+        if (choice >= 1 && choice <= numCandidates) {
+            vote(candidates, numCandidates, choice);
+        } else if (choice != 0) {
+            printf("Invalid choice! Please try again.\n");
+        }
+    } while (choice != 0);
+
+    // Display final results
+    displayResults(candidates, numCandidates);
+
+    return 0;
+}
+
+// Display menu
+void displayMenu() {
+    printf("===== Voting Machine =====\n");
+    printf("Candidates:\n");
+    printf("1. Candidate 1\n");
+    printf("2. Candidate 2\n");
+    // Add more candidates if needed
+    printf("0. Exit\n");
+    printf("==========================\n");
+}
+
+// Get number of candidates from the user
+int getNumCandidates() {
+    int numCandidates;
+    do {
+        printf("Enter the number of candidates (1-%d): ", MAX_CANDIDATES);
+        scanf("%d", &numCandidates);
+        if (numCandidates < 1 || numCandidates > MAX_CANDIDATES) {
+            printf("Invalid number of candidates! Please try again.\n");
+        }
+    } while (numCandidates < 1 || numCandidates > MAX_CANDIDATES);
+    return numCandidates;
+}
+
+// Get names of candidates from the user
+void getCandidateNames(Candidate candidates[], int numCandidates) {
+    for (int i = 0; i < numCandidates; i++) {
+        printf("Enter the name of Candidate %d: ", i + 1);
+        scanf("%s", candidates[i].name);
+        candidates[i].votes = 0;
+    }
+}
+
+// Vote for a candidate
+void vote(Candidate candidates[], int numCandidates, int choice) {
+    candidates[choice - 1].votes++;
+    printf("You voted for %s.\n", candidates[choice - 1].name);
+}
+
+// Display voting results
+void displayResults(Candidate candidates[], int numCandidates) {
+    printf("===== Voting Results =====\n");
+    printf("Candidate\tVotes\n");
+    for (int i = 0; i < numCandidates; i++) {
+        printf("%s\t\t%d\n", candidates[i].name, candidates[i].votes);
+    }
+    printf("==========================\n");
+}
