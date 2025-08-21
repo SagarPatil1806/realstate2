@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-// Define constants
+// Constants
 #define MAX_ARCHERS 50
 #define MAX_SCORES 6
 #define MAX_NAME_LENGTH 50
@@ -20,19 +20,17 @@ int getNumArchers();
 void getArcherInfo(Archer archers[], int numArchers);
 void calculateAverageScore(Archer *archer);
 void displayResults(Archer archers[], int numArchers);
+void showTopArchers(Archer archers[], int numArchers);
 
 int main() {
     int numArchers;
     Archer archers[MAX_ARCHERS];
 
-    // Get number of archers
+    displayMenu();
     numArchers = getNumArchers();
-
-    // Get archers' information
     getArcherInfo(archers, numArchers);
-
-    // Display results
     displayResults(archers, numArchers);
+    showTopArchers(archers, numArchers);
 
     return 0;
 }
@@ -40,7 +38,9 @@ int main() {
 // Display menu
 void displayMenu() {
     printf("===== Archery Project =====\n");
-    printf("Enter the scores for each archer (0-10):\n");
+    printf("You will enter names and scores for each archer.\n");
+    printf("Each archer will have %d scores (range 0-10).\n", MAX_SCORES);
+    printf("===========================\n");
 }
 
 // Get number of archers from the user
@@ -50,45 +50,79 @@ int getNumArchers() {
         printf("Enter the number of archers (1-%d): ", MAX_ARCHERS);
         scanf("%d", &numArchers);
         if (numArchers < 1 || numArchers > MAX_ARCHERS) {
-            printf("Invalid number of archers! Please try again.\n");
+            printf("Invalid number! Please try again.\n");
         }
     } while (numArchers < 1 || numArchers > MAX_ARCHERS);
     return numArchers;
 }
 
-// Get archers' information from the user
+// Get info for each archer
 void getArcherInfo(Archer archers[], int numArchers) {
-    displayMenu();
     for (int i = 0; i < numArchers; i++) {
-        printf("Enter the name of Archer %d: ", i + 1);
-        scanf("%s", archers[i].name);
-        printf("Enter the scores for Archer %d: ", i + 1);
+        getchar(); // Clear newline from input buffer
+        printf("\nEnter the name of Archer %d: ", i + 1);
+        fgets(archers[i].name, MAX_NAME_LENGTH, stdin);
+        archers[i].name[strcspn(archers[i].name, "\n")] = 0; // Remove newline
+
+        printf("Enter %d scores for %s (0-10):\n", MAX_SCORES, archers[i].name);
         for (int j = 0; j < MAX_SCORES; j++) {
-            scanf("%d", &archers[i].scores[j]);
+            int score;
+            do {
+                printf("  Score %d: ", j + 1);
+                scanf("%d", &score);
+                if (score < 0 || score > 10) {
+                    printf("  Invalid! Score must be between 0 and 10.\n");
+                }
+            } while (score < 0 || score > 10);
+            archers[i].scores[j] = score;
         }
+
         calculateAverageScore(&archers[i]);
     }
 }
 
-// Calculate average score for an archer
+// Calculate average score
 void calculateAverageScore(Archer *archer) {
-    float totalScore = 0;
+    int total = 0;
     for (int i = 0; i < MAX_SCORES; i++) {
-        totalScore += archer->scores[i];
+        total += archer->scores[i];
     }
-    archer->averageScore = totalScore / MAX_SCORES;
+    archer->averageScore = (float)total / MAX_SCORES;
 }
 
 // Display results
 void displayResults(Archer archers[], int numArchers) {
-    printf("===== Archery Results =====\n");
-    printf("Archer\t\tScores\t\tAverage Score\n");
+    printf("\n===== Archery Results =====\n");
+    printf("%-15s %-25s %s\n", "Archer", "Scores", "Average");
+    printf("----------------------------------------------------------\n");
+
     for (int i = 0; i < numArchers; i++) {
-        printf("%s\t\t", archers[i].name);
+        printf("%-15s ", archers[i].name);
         for (int j = 0; j < MAX_SCORES; j++) {
-            printf("%d ", archers[i].scores[j]);
+            printf("%2d ", archers[i].scores[j]);
         }
-        printf("\t\t%.2f\n", archers[i].averageScore);
+        printf("      %.2f\n", archers[i].averageScore);
     }
-    printf("============================\n");
 }
+
+// Show top-scoring archer(s)
+void showTopArchers(Archer archers[], int numArchers) {
+    float highestAvg = 0.0f;
+
+    // Find highest average
+    for (int i = 0; i < numArchers; i++) {
+        if (archers[i].averageScore > highestAvg) {
+            highestAvg = archers[i].averageScore;
+        }
+    }
+
+    // Display top archers
+    printf("\n===== Top Archer(s) =====\n");
+    for (int i = 0; i < numArchers; i++) {
+        if (archers[i].averageScore == highestAvg) {
+            printf("%s with an average score of %.2f\n", archers[i].name, archers[i].averageScore);
+        }
+    }
+    printf("==========================\n");
+}
+
