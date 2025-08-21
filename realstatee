@@ -1,240 +1,128 @@
-#include <iostream>
-#include <fstream>
-#include <vector>
-#include <string>
-#include <cstdlib> // For exit()
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-using namespace std;
+// Constants
+#define MAX_ARCHERS 50
+#define MAX_SCORES 6
+#define MAX_NAME_LENGTH 50
 
-class Property {
-private:
-    string address;
-    double price;
-    bool isAvailable;
+// Archer structure
+typedef struct {
+    char name[MAX_NAME_LENGTH];
+    int scores[MAX_SCORES];
+    float averageScore;
+} Archer;
 
-public:
-    Property(string addr, double prc) : address(addr), price(prc), isAvailable(true) {}
-
-    void displayInfo() {
-        cout << "Address: " << address << endl;
-        cout << "Price: $" << price << endl;
-        cout << (isAvailable ? "Available" : "Not Available") << endl;
-    }
-
-    void setAvailability(bool available) {
-        isAvailable = available;
-    }
-
-    string getAddress() {
-        return address;
-    }
-
-    double getPrice() {
-        return price;
-    }
-
-    bool getAvailability() {
-        return isAvailable;
-    }
-};
-
-class Client {
-private:
-    string name;
-    vector<Property*> properties;
-
-public:
-    Client(string n) : name(n) {}
-
-    void addProperty(Property* prop) {
-        properties.push_back(prop);
-    }
-
-    void displayProperties() {
-        cout << "Properties owned by " << name << ":" << endl;
-        for (Property* prop : properties) {
-            prop->displayInfo();
-        }
-    }
-
-    string getName() {
-        return name;
-    }
-};
-
-class RealEstateAgency {
-private:
-    vector<Property> properties;
-    vector<Client> clients;
-
-public:
-    void addProperty(Property prop) {
-        properties.push_back(prop);
-    }
-
-    void addClient(Client client) {
-        clients.push_back(client);
-    }
-
-    void displayProperties() {
-        cout << "Properties available for sale:" << endl;
-        for (Property prop : properties) {
-            prop.displayInfo();
-        }
-    }
-
-    void displayClients() {
-        cout << "Registered clients:" << endl;
-        for (Client client : clients) {
-            cout << client.getName() << endl;
-        }
-    }
-
-    vector<Property>& getProperties() {
-        return properties;
-    }
-
-    vector<Client>& getClients() {
-        return clients;
-    }
-
-    // Function to save property and client data to file
-    void saveDataToFile() {
-        ofstream file("realestate_data.txt");
-        if (!file.is_open()) {
-            cerr << "Error opening file for writing!" << endl;
-            exit(1);
-        }
-
-        // Save properties
-        file << "Properties:" << endl;
-        for (Property prop : properties) {
-            file << prop.getAddress() << "," << prop.getPrice() << "," << prop.getAvailability() << endl;
-        }
-
-        // Save clients
-        file << "Clients:" << endl;
-        for (Client client : clients) {
-            file << client.getName() << ",";
-            for (Property* prop : client.getProperties()) {
-                file << prop->getAddress() << ",";
-            }
-            file << endl;
-        }
-
-        file.close();
-        cout << "Data saved successfully!" << endl;
-    }
-
-    // Function to load property and client data from file
-    void loadDataFromFile() {
-        ifstream file("realestate_data.txt");
-        if (!file.is_open()) {
-            cerr << "Error opening file for reading!" << endl;
-            exit(1);
-        }
-
-        string line;
-        string section;
-        while (getline(file, line)) {
-            if (line == "Properties:") {
-                section = "Properties";
-            } else if (line == "Clients:") {
-                section = "Clients";
-            } else {
-                if (section == "Properties") {
-                    string address;
-                    double price;
-                    bool availability;
-                    stringstream ss(line);
-                    getline(ss, address, ',');
-                    ss >> price;
-                    ss.ignore(); // Ignore the comma
-                    ss >> availability;
-                    properties.push_back(Property(address, price));
-                } else if (section == "Clients") {
-                    string name;
-                    stringstream ss(line);
-                    getline(ss, name, ',');
-                    Client client(name);
-                    string propAddress;
-                    while (getline(ss, propAddress, ',')) {
-                        for (Property& prop : properties) {
-                            if (prop.getAddress() == propAddress) {
-                                client.addProperty(&prop);
-                                break;
-                            }
-                        }
-                    }
-                    clients.push_back(client);
-                }
-            }
-        }
-
-        file.close();
-        cout << "Data loaded successfully!" << endl;
-    }
-};
-
-void menu() {
-    cout << "===== Real Estate Management System =====" << endl;
-    cout << "1. Add Property" << endl;
-    cout << "2. Add Client" << endl;
-    cout << "3. Display Properties" << endl;
-    cout << "4. Display Clients" << endl;
-    cout << "5. Save Data to File" << endl;
-    cout << "6. Load Data from File" << endl;
-    cout << "7. Exit" << endl;
-    cout << "=========================================" << endl;
-    cout << "Enter your choice: ";
-}
+// Function prototypes
+void displayMenu();
+int getNumArchers();
+void getArcherInfo(Archer archers[], int numArchers);
+void calculateAverageScore(Archer *archer);
+void displayResults(Archer archers[], int numArchers);
+void showTopArchers(Archer archers[], int numArchers);
 
 int main() {
-    RealEstateAgency agency;
+    int numArchers;
+    Archer archers[MAX_ARCHERS];
 
-    int choice;
-    do {
-        menu();
-        cin >> choice;
-        cin.ignore(); // Clear the input buffer
-
-        switch (choice) {
-            case 1: {
-                string address;
-                double price;
-                cout << "Enter property address: ";
-                getline(cin, address);
-                cout << "Enter property price: $";
-                cin >> price;
-                agency.addProperty(Property(address, price));
-                break;
-            }
-            case 2: {
-                string name;
-                cout << "Enter client name: ";
-                getline(cin, name);
-                agency.addClient(Client(name));
-                break;
-            }
-            case 3:
-                agency.displayProperties();
-                break;
-            case 4:
-                agency.displayClients();
-                break;
-            case 5:
-                agency.saveDataToFile();
-                break;
-            case 6:
-                agency.loadDataFromFile();
-                break;
-            case 7:
-                cout << "Exiting program..." << endl;
-                break;
-            default:
-                cout << "Invalid choice! Please try again." << endl;
-        }
-    } while (choice != 7);
+    displayMenu();
+    numArchers = getNumArchers();
+    getArcherInfo(archers, numArchers);
+    displayResults(archers, numArchers);
+    showTopArchers(archers, numArchers);
 
     return 0;
 }
+
+// Display menu
+void displayMenu() {
+    printf("===== Archery Project =====\n");
+    printf("You will enter names and scores for each archer.\n");
+    printf("Each archer will have %d scores (range 0-10).\n", MAX_SCORES);
+    printf("===========================\n");
+}
+
+// Get number of archers from the user
+int getNumArchers() {
+    int numArchers;
+    do {
+        printf("Enter the number of archers (1-%d): ", MAX_ARCHERS);
+        scanf("%d", &numArchers);
+        if (numArchers < 1 || numArchers > MAX_ARCHERS) {
+            printf("Invalid number! Please try again.\n");
+        }
+    } while (numArchers < 1 || numArchers > MAX_ARCHERS);
+    return numArchers;
+}
+
+// Get info for each archer
+void getArcherInfo(Archer archers[], int numArchers) {
+    for (int i = 0; i < numArchers; i++) {
+        getchar(); // Clear newline from input buffer
+        printf("\nEnter the name of Archer %d: ", i + 1);
+        fgets(archers[i].name, MAX_NAME_LENGTH, stdin);
+        archers[i].name[strcspn(archers[i].name, "\n")] = 0; // Remove newline
+
+        printf("Enter %d scores for %s (0-10):\n", MAX_SCORES, archers[i].name);
+        for (int j = 0; j < MAX_SCORES; j++) {
+            int score;
+            do {
+                printf("  Score %d: ", j + 1);
+                scanf("%d", &score);
+                if (score < 0 || score > 10) {
+                    printf("  Invalid! Score must be between 0 and 10.\n");
+                }
+            } while (score < 0 || score > 10);
+            archers[i].scores[j] = score;
+        }
+
+        calculateAverageScore(&archers[i]);
+    }
+}
+
+// Calculate average score
+void calculateAverageScore(Archer *archer) {
+    int total = 0;
+    for (int i = 0; i < MAX_SCORES; i++) {
+        total += archer->scores[i];
+    }
+    archer->averageScore = (float)total / MAX_SCORES;
+}
+
+// Display results
+void displayResults(Archer archers[], int numArchers) {
+    printf("\n===== Archery Results =====\n");
+    printf("%-15s %-25s %s\n", "Archer", "Scores", "Average");
+    printf("----------------------------------------------------------\n");
+
+    for (int i = 0; i < numArchers; i++) {
+        printf("%-15s ", archers[i].name);
+        for (int j = 0; j < MAX_SCORES; j++) {
+            printf("%2d ", archers[i].scores[j]);
+        }
+        printf("      %.2f\n", archers[i].averageScore);
+    }
+}
+
+// Show top-scoring archer(s)
+void showTopArchers(Archer archers[], int numArchers) {
+    float highestAvg = 0.0f;
+
+    // Find highest average
+    for (int i = 0; i < numArchers; i++) {
+        if (archers[i].averageScore > highestAvg) {
+            highestAvg = archers[i].averageScore;
+        }
+    }
+
+    // Display top archers
+    printf("\n===== Top Archer(s) =====\n");
+    for (int i = 0; i < numArchers; i++) {
+        if (archers[i].averageScore == highestAvg) {
+            printf("%s with an average score of %.2f\n", archers[i].name, archers[i].averageScore);
+        }
+    }
+    printf("==========================\n");
+}
+
